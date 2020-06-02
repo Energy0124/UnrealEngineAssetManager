@@ -20,6 +20,10 @@ import Link from '@material-ui/core/Link';
 import { IconButton } from '@material-ui/core';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import TextField from '@material-ui/core/TextField';
+import Chip from '@material-ui/core/Chip';
+import Avatar from '@material-ui/core/Avatar';
+import Paper from '@material-ui/core/Paper';
+import ButtonBase from '@material-ui/core/ButtonBase';
 // import { FixedSizeGrid } from 'react-window';
 
 const fsAsync = fs.promises;
@@ -60,6 +64,41 @@ function Copyright() {
 }
 
 const useStyles = makeStyles((theme) => ({
+  chipRoot: {
+    display: 'flex',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    '& > *': {
+      margin: theme.spacing(0.5)
+    }
+  },
+  root: {
+    display: 'flex'
+  },
+  details: {
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  content: {
+    flex: '1 0 auto'
+  },
+  cover: {
+    width: 151
+  },
+  img: {
+    margin: 'auto',
+    display: 'block',
+    maxWidth: '100%',
+    maxHeight: '100%'
+  },
+  image: {
+    width: 128,
+    height: 128
+  },
+  paper: {
+    maxWidth: 300,
+    maxHeight: 300
+  },
   icon: {
     marginRight: theme.spacing(2)
   },
@@ -86,7 +125,7 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1
   },
   cardTitle: {
-    fontSize: 14,
+    fontSize: 14
   },
   footer: {
     backgroundColor: theme.palette.background.paper,
@@ -119,11 +158,12 @@ async function collectTags() {
     let myTags: Set<string> = new Set<string>();
 
     myTags.add(assetInfo.data.title.toLowerCase());
-
+    let cat = '';
     for (const category of assetInfo.data.categories) {
       let c = category.name.toLowerCase();
       myTags.add(c);
       categories.add(c);
+      cat = c;
       // console.log(`adding category ${category.name}`);
     }
     for (const tag of assetInfo.data.tags) {
@@ -137,6 +177,7 @@ async function collectTags() {
         }
       }
     }
+    assetInfo.data.category = cat;
     assetInfo.data.allTags = Array.from(myTags);
     // console.log(assetInfo.data.allTags);
     for (const myTag of myTags) {
@@ -190,7 +231,7 @@ async function downloadAssetsData() {
     await fsAsync.writeFile(assetDataPath, JSON.stringify(data));
   }
   console.log(`done loading assetData`);
-  // console.log(assetData);
+  console.log(assetData);
 
 
 }
@@ -477,7 +518,7 @@ export default function Counter(props: Props) {
           return item.data.allTags.some((t: string) => t.includes(lowercasedFilter));
         });
       }
-      setFilteredData(data);
+      setFilteredData(data.reverse());
     };
 
     fetchData();
@@ -554,12 +595,10 @@ export default function Counter(props: Props) {
         <div className={classes.heroContent}>
           <Container maxWidth="sm">
             <Typography component="h1" variant="h2" align="center" color="textPrimary" gutterBottom>
-              Album layout
+              UE Asset Manager
             </Typography>
             <Typography variant="h5" align="center" color="textSecondary" paragraph>
-              Something short and leading about the collection below—its contents, the creator, etc.
-              Make it short and sweet, but not too short so folks don&apos;t simply skip over it
-              entirely.
+              Search! Fast! Better!
             </Typography>
             <Typography component={'span'} variant="h5" align="center" color="textSecondary" paragraph>
               <TextField value={filter} onChange={handleChange} id="outlined-basic" label="Filter"
@@ -596,51 +635,93 @@ export default function Counter(props: Props) {
             </div>
           </Container>
         </div>
-        <Container className={classes.cardGrid} maxWidth={false}>
-          {/* End hero unit */}
+        <Paper>
           <Grid container spacing={1}>
-            {/*<FixedSizeGrid*/}
-            {/*  columnCount={3}*/}
-            {/*  columnWidth={100}*/}
-            {/*  height={150}*/}
-            {/*  rowCount={1000}*/}
-            {/*  rowHeight={35}*/}
-            {/*  width={300}*/}
-            {/*>*/}
-            {/*  {Cell}*/}
-            {/*</FixedSizeGrid>*/}
+            {/*<div className={classes.chipRoot}>*/}
             {filteredData.map((item) => (
-              <Grid item key={item.data.id} xs={12} sm={6} md={4}>
-                <Card className={classes.card}>
+              // <Grid item xs={3}>
+              //   <Chip key={item.data.id}
+              //         avatar={<Avatar alt={item.data.title}
+              //                         src={item.data.thumbnail}/>}
+              //         label={item.data.title}
+              //         component="a"
+              //         href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}
+              //         clickable
+              //   />
+              // </Grid>
+              <Grid item xs={3} key={item.data.id}>
+                <Link underline='none' href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}><Card
+                  className={classes.root}>
+                  <div className={classes.details}>
+                    <CardContent className={classes.content}>
+                      <Typography style={{
+                        height: 60,
+                        width: 120
+                      }} variant="body1">
+                        {item.data.title}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {item.data.category}
+                      </Typography>
+                    </CardContent>
+                  </div>
                   <CardMedia
-                    className={classes.cardMedia}
+
+                    className={classes.cover}
                     image={item.data.thumbnail}
-                    title={item.data.title}
+                    title={item.data.description}
                   />
-                  <CardContent className={classes.cardContent}>
-                    <Typography color="primary" gutterBottom variant="h5" component="h2">
-                      {item.data.title}
-                    </Typography>
-                    <Typography>
-                      {item.data.description}
-                    </Typography>
-                    <Typography className={classes.cardTitle} color="textSecondary" gutterBottom>
-                      {item.data.allTags.join(' ')}
-                    </Typography>
-                  </CardContent>
-                  <CardActions>
-                    <Button size="small" color="primary">
-                      View
-                    </Button>
-                    <Button size="small" color="primary">
-                      Edit
-                    </Button>
-                  </CardActions>
-                </Card>
+                </Card></Link>
               </Grid>
             ))}
           </Grid>
-        </Container>
+          {/*</div>*/}
+        </Paper>
+        {/*<Container className={classes.cardGrid} maxWidth={false}>*/}
+        {/*  /!* End hero unit *!/*/}
+        {/*  <Grid container spacing={1}>*/}
+        {/*    /!*<FixedSizeGrid*!/*/}
+        {/*    /!*  columnCount={3}*!/*/}
+        {/*    /!*  columnWidth={100}*!/*/}
+        {/*    /!*  height={150}*!/*/}
+        {/*    /!*  rowCount={1000}*!/*/}
+        {/*    /!*  rowHeight={35}*!/*/}
+        {/*    /!*  width={300}*!/*/}
+        {/*    /!*>*!/*/}
+        {/*    /!*  {Cell}*!/*/}
+        {/*    /!*</FixedSizeGrid>*!/*/}
+        {/*    {filteredData.map((item) => (*/}
+        {/*      <Grid item key={item.data.id} xs={12} sm={6} md={4}>*/}
+        {/*        <Card className={classes.card}>*/}
+        {/*          <CardMedia*/}
+        {/*            className={classes.cardMedia}*/}
+        {/*            image={item.data.thumbnail}*/}
+        {/*            title={item.data.title}*/}
+        {/*          />*/}
+        {/*          <CardContent className={classes.cardContent}>*/}
+        {/*            <Typography color="primary" gutterBottom variant="h5" component="h2">*/}
+        {/*              {item.data.title}*/}
+        {/*            </Typography>*/}
+        {/*            <Typography>*/}
+        {/*              {item.data.description}*/}
+        {/*            </Typography>*/}
+        {/*            <Typography className={classes.cardTitle} color="textSecondary" gutterBottom>*/}
+        {/*              {item.data.allTags.join(' ')}*/}
+        {/*            </Typography>*/}
+        {/*          </CardContent>*/}
+        {/*          <CardActions>*/}
+        {/*            <Button size="small" color="primary">*/}
+        {/*              View*/}
+        {/*            </Button>*/}
+        {/*            <Button size="small" color="primary">*/}
+        {/*              Edit*/}
+        {/*            </Button>*/}
+        {/*          </CardActions>*/}
+        {/*        </Card>*/}
+        {/*      </Grid>*/}
+        {/*    ))}*/}
+        {/*  </Grid>*/}
+        {/*</Container>*/}
       </main>
       {/* Footer */}
       <footer className={classes.footer}>
