@@ -80,7 +80,7 @@ const useStyles = makeStyles((theme) => ({
     flexDirection: 'column'
   },
   content: {
-    flex: '1 0 auto'
+    // flex: '1 0 auto'
   },
   cover: {
     width: 151
@@ -652,11 +652,17 @@ export default function Counter(props: Props) {
               <Grid item xs={3} key={item.data.id}>
                 <Link underline='none' href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}><Card
                   className={classes.root}>
+                  <CardMedia
+
+                    className={classes.cover}
+                    image={item.data.thumbnail}
+                    title={item.data.description}
+                  />
                   <div className={classes.details}>
                     <CardContent className={classes.content}>
                       <Typography style={{
                         height: 60,
-                        width: 120
+                        width: 150
                       }} variant="body1">
                         {item.data.title}
                       </Typography>
@@ -665,12 +671,7 @@ export default function Counter(props: Props) {
                       </Typography>
                     </CardContent>
                   </div>
-                  <CardMedia
 
-                    className={classes.cover}
-                    image={item.data.thumbnail}
-                    title={item.data.description}
-                  />
                 </Card></Link>
               </Grid>
             ))}
