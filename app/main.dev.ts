@@ -58,16 +58,19 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     height: 728,
-    webPreferences:
-      process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
-        ? {
-            nodeIntegration: true
-          }
-        : {
-            preload: path.join(__dirname, 'dist/renderer.prod.js')
-          }
+    // webPreferences:
+    //   process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
+    //     ? {
+    //         nodeIntegration: true
+    //       }
+    //     : {
+    //         preload: path.join(__dirname, 'dist/renderer.prod.js')
+    //       }
+    webPreferences: {
+      nodeIntegration: true
+    }
   });
-
+  mainWindow.webContents.openDevTools()
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
   // @TODO: Use 'ready-to-show' event

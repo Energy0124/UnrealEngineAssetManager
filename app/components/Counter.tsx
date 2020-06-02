@@ -1,10 +1,26 @@
-import React, { ChangeEvent, useState } from 'react';
-import { Link } from 'react-router-dom';
-import styles from './Counter.css';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import routes from '../constants/routes.json';
 import fs from 'fs';
 import path from 'path';
-
+import AppBar from '@material-ui/core/AppBar';
+import Button from '@material-ui/core/Button';
+import CameraIcon from '@material-ui/icons/PhotoCamera';
+import Card from '@material-ui/core/Card';
+import CardActions from '@material-ui/core/CardActions';
+import CardContent from '@material-ui/core/CardContent';
+import CardMedia from '@material-ui/core/CardMedia';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import Grid from '@material-ui/core/Grid';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import { makeStyles } from '@material-ui/core/styles';
+import Container from '@material-ui/core/Container';
+import Link from '@material-ui/core/Link';
+import { IconButton } from '@material-ui/core';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import TextField from '@material-ui/core/TextField';
+// import { FixedSizeGrid } from 'react-window';
 
 const fsAsync = fs.promises;
 const axios = require('axios').default;
@@ -29,6 +45,55 @@ let assetData: any[] = [];
 let loadedAssetId: string[] = [];
 let fakeJar: { [x: string]: any; } = {};
 let loginWindow: Electron.BrowserWindow;
+
+function Copyright() {
+  return (
+    <Typography variant="body2" color="textSecondary" align="center">
+      {'Copyright © '}
+      <Link color="inherit" href="https://material-ui.com/">
+        Your Website
+      </Link>{' '}
+      {new Date().getFullYear()}
+      {'.'}
+    </Typography>
+  );
+}
+
+const useStyles = makeStyles((theme) => ({
+  icon: {
+    marginRight: theme.spacing(2)
+  },
+  heroContent: {
+    backgroundColor: theme.palette.background.paper,
+    padding: theme.spacing(8, 0, 6)
+  },
+  heroButtons: {
+    marginTop: theme.spacing(4)
+  },
+  cardGrid: {
+    paddingTop: theme.spacing(8),
+    paddingBottom: theme.spacing(8)
+  },
+  card: {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  cardMedia: {
+    paddingTop: '56.25%' // 16:9
+  },
+  cardContent: {
+    flexGrow: 1
+  },
+  cardTitle: {
+    fontSize: 14,
+  },
+  footer: {
+    backgroundColor: theme.palette.background.paper,
+    padding: theme.spacing(6)
+  }
+}));
+
 
 function isInVault(vault: any[], el: any) {
   var i;
@@ -73,7 +138,7 @@ async function collectTags() {
       }
     }
     assetInfo.data.allTags = Array.from(myTags);
-    console.log(assetInfo.data.allTags);
+    // console.log(assetInfo.data.allTags);
     for (const myTag of myTags) {
       tags.add(myTag);
     }
@@ -81,9 +146,9 @@ async function collectTags() {
 
   }
 
-
-  console.log(tags);
-  console.log(categories);
+  //
+  // console.log(tags);
+  // console.log(categories);
 }
 
 async function downloadAssetsData() {
@@ -121,11 +186,11 @@ async function downloadAssetsData() {
     });
     let data = respond.data.data;
     assetData.push(data);
-    console.log(data);
+    // console.log(data);
     await fsAsync.writeFile(assetDataPath, JSON.stringify(data));
   }
   console.log(`done loading assetData`);
-  console.log(assetData);
+  // console.log(assetData);
 
 
 }
@@ -138,7 +203,7 @@ async function downloadVaultData(forceUpdate: boolean) {
     console.log(`Vault already have data, skipping download`);
     vault = JSON.parse(vaultString);
     vaultData = vault;
-    console.log(vault);
+    // console.log(vault);
     return vault;
   }
 
@@ -382,93 +447,212 @@ async function login() {
 
 
 export default function Counter(props: Props) {
-  const {
-    counter
-  } = props;
+  // const {
+  //   counter
+  // } = props;
+
+  // console.log(props);
+
   const [filter, setFilter] = useState('');
+
+  let initialState: any[] = [];
+  const [filteredData, setFilteredData] = useState(initialState);
+  const classes = useStyles();
+  useEffect(() => {
+
+    const fetchData = async () => {
+      // console.log(vaultData);
+      // console.log(vaultData === []);
+      if (vaultData.length <= 0) {
+        console.log('do downloadVaultData');
+        await downloadVaultData(false);
+        await downloadAssetsData();
+        await collectTags();
+        // console.log(vaultData);
+      }
+      const lowercasedFilter = filter.toLowerCase();
+      let data = assetData;
+      if (lowercasedFilter.trim() !== '') {
+        data = assetData.filter(item => {
+          return item.data.allTags.some((t: string) => t.includes(lowercasedFilter));
+        });
+      }
+      setFilteredData(data);
+    };
+
+    fetchData();
+  }, [filter]);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     setFilter(event.target.value);
   }
 
-  const lowercasedFilter = filter.toLowerCase();
-  const filteredData = assetData.filter(item => {
-    return item.data.allTags.some((t: string) => t.includes(lowercasedFilter));
-  });
-  for (const filteredDatum of filteredData) {
-    if (filteredDatum.data.id == 'eda8fd090dec4999996350197caaed0b') {
-      console.log(filteredDatum);
-    }
-  }
-  for (const filteredDatum of vaultData) {
-    if (filteredDatum.id == 'eda8fd090dec4999996350197caaed0b') {
-      console.log(filteredDatum);
-    }
-  }
-  console.log(filteredData);
   // console.log(vaultData);
+  // function Cell(props: { columnIndex: any, rowIndex: any, style: any }) {
+  //   let { columnIndex, rowIndex, style } = props;
+  //   let item = {
+  //     data:{
+  //       id:'',
+  //       thumbnail: '',
+  //       title: '',
+  //       description: '',
+  //       allTags: ['']
+  //     }
+  //   }
+  //   let index = columnIndex + rowIndex * 3;
+  //   if (filteredData.length>index) {
+  //      item = filteredData[index]
+  //   }
+  //   return (
+  //     <Grid item key={item.data.id} xs={12} sm={6} md={4} style={style}>
+  //       <Card className={classes.card}>
+  //         <CardMedia
+  //           className={classes.cardMedia}
+  //           image={item.data.thumbnail}
+  //           title={item.data.title}
+  //         />
+  //         <CardContent className={classes.cardContent}>
+  //           <Typography color="primary" gutterBottom variant="h5" component="h2">
+  //             {item.data.title}
+  //           </Typography>
+  //           <Typography>
+  //             {item.data.description}
+  //           </Typography>
+  //           <Typography className={classes.cardTitle} color="textSecondary" gutterBottom>
+  //             {item.data.allTags.join(' ')}
+  //           </Typography>
+  //         </CardContent>
+  //         <CardActions>
+  //           <Button size="small" color="primary">
+  //             View
+  //           </Button>
+  //           <Button size="small" color="primary">
+  //             Edit
+  //           </Button>
+  //         </CardActions>
+  //       </Card>
+  //     </Grid>
+  //   );
+  // }
+
   return (
-    <div>
-      <div className={styles.backButton} data-tid="backButton">
-        <Link to={routes.HOME}>
-          <i className="fa fa-arrow-left fa-3x"/>
-        </Link>
-      </div>
-      <div>
-        <input value={filter} onChange={handleChange}/>
-        {filteredData.map(item => (
-          <div key={item.data.id}>
-            <div>
-              {item.data.title}
+    <React.Fragment>
+      <CssBaseline/>
+      <AppBar position="relative">
+        <Toolbar>
+          <IconButton color="secondary" aria-label="go back" component={RouterLink} to={routes.HOME}>
+            <ArrowBackIcon className={classes.icon}/>
+          </IconButton>
+          <CameraIcon className={classes.icon}/>
+          <Typography variant="h6" color="inherit" noWrap>
+            Album layout
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <main>
+        {/* Hero unit */}
+        <div className={classes.heroContent}>
+          <Container maxWidth="sm">
+            <Typography component="h1" variant="h2" align="center" color="textPrimary" gutterBottom>
+              Album layout
+            </Typography>
+            <Typography variant="h5" align="center" color="textSecondary" paragraph>
+              Something short and leading about the collection below—its contents, the creator, etc.
+              Make it short and sweet, but not too short so folks don&apos;t simply skip over it
+              entirely.
+            </Typography>
+            <Typography component={'span'} variant="h5" align="center" color="textSecondary" paragraph>
+              <TextField value={filter} onChange={handleChange} id="outlined-basic" label="Filter"
+                         variant="outlined"/>
+            </Typography>
+            <div className={classes.heroButtons}>
+              <Grid container spacing={2} justify="center">
+                <Grid item>
+                  <Button onClick={login} variant="contained" color="primary">
+                    login
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button onClick={printCookie} variant="outlined" color="primary">
+                    printCookie
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button onClick={() => downloadVaultData(false)} variant="outlined" color="primary">
+                    downloadVaultData
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button onClick={downloadAssetsData} variant="outlined" color="primary">
+                    downloadAssetsData
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button onClick={collectTags} variant="outlined" color="primary">
+                    collectTags
+                  </Button>
+                </Grid>
+              </Grid>
             </div>
-          </div>
-        ))}
-      </div>
-      <div className={`counter ${styles.counter}`} data-tid="counter">
-        {counter}
-      </div>
-      <div className={styles.btnGroup}>
-        <button
-          className={styles.btn}
-          onClick={() => login()}
-          data-tclass="btn"
-          type="button"
-        >
-          login
-        </button>
-        <button
-          className={styles.btn}
-          onClick={() => printCookie()}
-          data-tclass="btn"
-          type="button"
-        >
-          cookie
-        </button>
-        <button
-          className={styles.btn}
-          onClick={() => downloadVaultData(false)}
-          data-tclass="btn"
-          type="button"
-        >
-          vault
-        </button>
-        <button
-          className={styles.btn}
-          onClick={() => downloadAssetsData()}
-          data-tclass="btn"
-          type="button"
-        >
-          assets
-        </button>
-        <button
-          className={styles.btn}
-          onClick={() => collectTags()}
-          data-tclass="btn"
-          type="button"
-        >
-          tags
-        </button>
-      </div>
-    </div>
+          </Container>
+        </div>
+        <Container className={classes.cardGrid} maxWidth={false}>
+          {/* End hero unit */}
+          <Grid container spacing={1}>
+            {/*<FixedSizeGrid*/}
+            {/*  columnCount={3}*/}
+            {/*  columnWidth={100}*/}
+            {/*  height={150}*/}
+            {/*  rowCount={1000}*/}
+            {/*  rowHeight={35}*/}
+            {/*  width={300}*/}
+            {/*>*/}
+            {/*  {Cell}*/}
+            {/*</FixedSizeGrid>*/}
+            {filteredData.map((item) => (
+              <Grid item key={item.data.id} xs={12} sm={6} md={4}>
+                <Card className={classes.card}>
+                  <CardMedia
+                    className={classes.cardMedia}
+                    image={item.data.thumbnail}
+                    title={item.data.title}
+                  />
+                  <CardContent className={classes.cardContent}>
+                    <Typography color="primary" gutterBottom variant="h5" component="h2">
+                      {item.data.title}
+                    </Typography>
+                    <Typography>
+                      {item.data.description}
+                    </Typography>
+                    <Typography className={classes.cardTitle} color="textSecondary" gutterBottom>
+                      {item.data.allTags.join(' ')}
+                    </Typography>
+                  </CardContent>
+                  <CardActions>
+                    <Button size="small" color="primary">
+                      View
+                    </Button>
+                    <Button size="small" color="primary">
+                      Edit
+                    </Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </main>
+      {/* Footer */}
+      <footer className={classes.footer}>
+        <Typography variant="h6" align="center" gutterBottom>
+          Footer
+        </Typography>
+        <Typography variant="subtitle1" align="center" color="textSecondary" component="p">
+          Something here to give the footer a purpose!
+        </Typography>
+        <Copyright/>
+      </footer>
+      {/* End footer */}
+    </React.Fragment>
   );
 }
