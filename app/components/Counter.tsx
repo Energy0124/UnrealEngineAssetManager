@@ -87,7 +87,8 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.background.paper
   },
   gridList: {
-    // height: 450
+    width: '100%',
+    margin: 5
   },
   gridIcon: {
     color: 'rgba(255, 255, 255, 0.54)'
@@ -529,6 +530,7 @@ export default function Counter(props: Props) {
   // console.log(props);
 
   const [filter, setFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
 
   let initialState: any[] = [];
   const [filteredData, setFilteredData] = useState(initialState);
@@ -546,17 +548,25 @@ export default function Counter(props: Props) {
         // console.log(vaultData);
       }
       const lowercasedFilter = filter.toLowerCase();
+      const lowercasedCategoryFilter = categoryFilter.toLowerCase();
       let data = assetData;
+      if (lowercasedCategoryFilter.trim() !== '') {
+        data = assetData
+          .filter(value => value.data.categories
+            .map((x: any) => x.name.toLowerCase())
+            .some((v: any) => v.includes(lowercasedCategoryFilter)));
+      }
       if (lowercasedFilter.trim() !== '') {
-        data = assetData.filter(item => {
-          return item.data.allTags.some((t: string) => t.includes(lowercasedFilter));
-        });
+        data = data
+          .filter(item => {
+            return item.data.allTags.some((t: string) => t.includes(lowercasedFilter));
+          });
       }
       setFilteredData(data.reverse());
     };
 
     fetchData();
-  }, [filter]);
+  }, [filter, categoryFilter]);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     setFilter(event.target.value);
@@ -668,9 +678,15 @@ export default function Counter(props: Props) {
               </Grid>
               <Grid container spacing={2} justify="center">
                 <ButtonGroup variant="contained" color="primary" aria-label="contained primary button group">
-                  <Button>One</Button>
-                  <Button>Two</Button>
-                  <Button>Three</Button>
+                  <Button onClick={() => {
+                    setCategoryFilter('code plugins');
+                  }}>Code Plugins</Button>
+                  <Button onClick={() => {
+                    setCategoryFilter('animations');
+                  }}>Animations</Button>
+                  <Button onClick={() => {
+                    setCategoryFilter('');
+                  }}>Reset</Button>
                 </ButtonGroup>
               </Grid>
             </div>
@@ -681,21 +697,26 @@ export default function Counter(props: Props) {
             <GridList cellHeight={180} cols={6} className={classes.gridList}>
               {filteredData.map((item) => (
                 <GridListTile key={item.data.id}>
-                  <img src={item.data.thumbnail} alt={item.data.title}/>
+
+                  <img title={item.data.title} src={item.data.thumbnail} alt={item.data.title}/>
+
                   <GridListTileBar
-                    title={<Link underline='none' color='inherit'
-                                 href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}><b>{item.data.title}</b></Link>}
-                    subtitle={<Tooltip title={item.data.allTags.join(', ')}><span>{item.data.category}</span></Tooltip>}
+                    title={
+                      <Link underline='none' color='inherit'
+                            href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}>
+                        <b>{item.data.title}</b>
+                      </Link>}
+                    subtitle={<Tooltip
+                      title={item.data.allTags.join(', ')}><span>{item.data.categories.map((x: any) => x.name).join(', ')}</span></Tooltip>}
                     actionIcon={
                       <Tooltip title={item.data.description}>
                         <IconButton aria-label={item.data.title} className={classes.icon}>
-
                           <InfoIcon style={{ color: 'white' }}/>
-
                         </IconButton>
                       </Tooltip>
                     }
                   />
+
                 </GridListTile>
               ))}
             </GridList>
