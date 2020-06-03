@@ -19,11 +19,18 @@ import Container from '@material-ui/core/Container';
 import Link from '@material-ui/core/Link';
 import { IconButton } from '@material-ui/core';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import InfoIcon from '@material-ui/icons/InfoOutlined';
 import TextField from '@material-ui/core/TextField';
 import Chip from '@material-ui/core/Chip';
 import Avatar from '@material-ui/core/Avatar';
 import Paper from '@material-ui/core/Paper';
 import ButtonBase from '@material-ui/core/ButtonBase';
+import ListSubheader from '@material-ui/core/ListSubheader';
+import GridListTile from '@material-ui/core/GridListTile';
+import GridList from '@material-ui/core/GridList';
+import GridListTileBar from '@material-ui/core/GridListTileBar';
+import Tooltip from '@material-ui/core/Tooltip';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
 // import { FixedSizeGrid } from 'react-window';
 
 const fsAsync = fs.promises;
@@ -71,6 +78,19 @@ const useStyles = makeStyles((theme) => ({
     '& > *': {
       margin: theme.spacing(0.5)
     }
+  },
+  gridRoot: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    overflow: 'hidden',
+    backgroundColor: theme.palette.background.paper
+  },
+  gridList: {
+    // height: 450
+  },
+  gridIcon: {
+    color: 'rgba(255, 255, 255, 0.54)'
   },
   root: {
     display: 'flex'
@@ -153,6 +173,9 @@ function isInVault(vault: any[], el: any) {
 
 async function collectTags() {
   for (const assetInfo of assetData) {
+    if (assetInfo.data.allTags) {
+      continue;
+    }
     let assetDataPath = path.join(assetDataFolder, `${assetInfo.data.id}.json`);
 
     let myTags: Set<string> = new Set<string>();
@@ -195,6 +218,9 @@ async function collectTags() {
 async function downloadAssetsData() {
   assetData = [];
   loadedAssetId = [];
+  if (!fs.existsSync(assetDataFolder)) {
+    await fsAsync.mkdir(assetDataFolder);
+  }
   for (const vaultDatum of vaultData) {
     if (loadedAssetId.includes(vaultDatum.id)) {
       continue;
@@ -206,15 +232,20 @@ async function downloadAssetsData() {
       let dataString = await fsAsync.readFile(assetDataPath, 'utf8');
       if (dataString.trim()) {
         // console.log(`Vault already have data, skipping data download for ${vaultDatum.title}`);
-        let data = JSON.parse(dataString);
+        try {
+          let data = JSON.parse(dataString);
+          loadedAssetId.push(data.data.id);
+          assetData.push(data);
+          // console.log(data);
+          continue;
+        } catch (e) {
+          console.log(e);
+        }
         // if (data.status) {
         //   data = data.data;
         //   await fsAsync.writeFile(assetDataPath, JSON.stringify(data));
         // }
-        loadedAssetId.push(data.data.id);
-        assetData.push(data);
-        // console.log(data);
-        continue;
+
       }
     }
 
@@ -239,7 +270,10 @@ async function downloadAssetsData() {
 async function downloadVaultData(forceUpdate: boolean) {
   let vault: any[];
   vaultData = [];
-  let vaultString: string = await fsAsync.readFile(vaultPath, 'utf8');
+  let vaultString: string = '';
+  if (fs.existsSync(vaultPath)) {
+    vaultString = await fsAsync.readFile(vaultPath, 'utf8');
+  }
   if (!forceUpdate && vaultString.trim()) {
     console.log(`Vault already have data, skipping download`);
     vault = JSON.parse(vaultString);
@@ -598,7 +632,7 @@ export default function Counter(props: Props) {
               UE Asset Manager
             </Typography>
             <Typography variant="h5" align="center" color="textSecondary" paragraph>
-              Search! Fast! Better!
+              Too Many Assets
             </Typography>
             <Typography component={'span'} variant="h5" align="center" color="textSecondary" paragraph>
               <TextField value={filter} onChange={handleChange} id="outlined-basic" label="Filter"
@@ -632,50 +666,80 @@ export default function Counter(props: Props) {
                   </Button>
                 </Grid>
               </Grid>
+              <Grid container spacing={2} justify="center">
+                <ButtonGroup variant="contained" color="primary" aria-label="contained primary button group">
+                  <Button>One</Button>
+                  <Button>Two</Button>
+                  <Button>Three</Button>
+                </ButtonGroup>
+              </Grid>
             </div>
           </Container>
         </div>
         <Paper>
-          <Grid container spacing={1}>
-            {/*<div className={classes.chipRoot}>*/}
-            {filteredData.map((item) => (
-              // <Grid item xs={3}>
-              //   <Chip key={item.data.id}
-              //         avatar={<Avatar alt={item.data.title}
-              //                         src={item.data.thumbnail}/>}
-              //         label={item.data.title}
-              //         component="a"
-              //         href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}
-              //         clickable
-              //   />
-              // </Grid>
-              <Grid item xs={3} key={item.data.id}>
-                <Link underline='none' href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}><Card
-                  className={classes.root}>
-                  <CardMedia
+          <div className={classes.root}>
+            <GridList cellHeight={180} cols={6} className={classes.gridList}>
+              {filteredData.map((item) => (
+                <GridListTile key={item.data.id}>
+                  <img src={item.data.thumbnail} alt={item.data.title}/>
+                  <GridListTileBar
+                    title={<Link underline='none' color='inherit'
+                                 href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}><b>{item.data.title}</b></Link>}
+                    subtitle={<Tooltip title={item.data.allTags.join(', ')}><span>{item.data.category}</span></Tooltip>}
+                    actionIcon={
+                      <Tooltip title={item.data.description}>
+                        <IconButton aria-label={item.data.title} className={classes.icon}>
 
-                    className={classes.cover}
-                    image={item.data.thumbnail}
-                    title={item.data.description}
+                          <InfoIcon style={{ color: 'white' }}/>
+
+                        </IconButton>
+                      </Tooltip>
+                    }
                   />
-                  <div className={classes.details}>
-                    <CardContent className={classes.content}>
-                      <Typography style={{
-                        height: 60,
-                        width: 150
-                      }} variant="body1">
-                        {item.data.title}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {item.data.category}
-                      </Typography>
-                    </CardContent>
-                  </div>
+                </GridListTile>
+              ))}
+            </GridList>
+          </div>
+          {/*<Grid container spacing={1}>*/}
+          {/*  /!*<div className={classes.chipRoot}>*!/*/}
+          {/*  {filteredData.map((item) => (*/}
+          {/*    // <Grid item xs={3}>*/}
+          {/*    //   <Chip key={item.data.id}*/}
+          {/*    //         avatar={<Avatar alt={item.data.title}*/}
+          {/*    //                         src={item.data.thumbnail}/>}*/}
+          {/*    //         label={item.data.title}*/}
+          {/*    //         component="a"*/}
+          {/*    //         href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}*/}
+          {/*    //         clickable*/}
+          {/*    //   />*/}
+          {/*    // </Grid>*/}
+          {/*    <Grid item xs={3} key={item.data.id}>*/}
+          {/*      <Link underline='none' href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}><Card*/}
+          {/*        className={classes.root}>*/}
+          {/*        <CardMedia*/}
 
-                </Card></Link>
-              </Grid>
-            ))}
-          </Grid>
+          {/*          className={classes.cover}*/}
+          {/*          image={item.data.thumbnail}*/}
+          {/*          title={item.data.description}*/}
+          {/*        />*/}
+          {/*        <div className={classes.details}>*/}
+          {/*          <CardContent className={classes.content}>*/}
+          {/*            <Typography style={{*/}
+          {/*              height: 60,*/}
+          {/*              width: 150*/}
+          {/*            }} variant="body1">*/}
+          {/*              {item.data.title}*/}
+          {/*            </Typography>*/}
+          {/*            <Typography variant="body2" color="textSecondary">*/}
+          {/*              {item.data.category}*/}
+          {/*            </Typography>*/}
+          {/*          </CardContent>*/}
+          {/*        </div>*/}
+
+          {/*      </Card></Link>*/}
+          {/*    </Grid>*/}
+          {/*  ))}*/}
+          {/*</Grid>*/}
           {/*</div>*/}
         </Paper>
         {/*<Container className={classes.cardGrid} maxWidth={false}>*/}
