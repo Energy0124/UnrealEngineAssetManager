@@ -17,7 +17,7 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import Link from '@material-ui/core/Link';
-import { IconButton } from '@material-ui/core';
+import { IconButton, RadioGroup } from '@material-ui/core';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import TextField from '@material-ui/core/TextField';
@@ -31,6 +31,10 @@ import GridList from '@material-ui/core/GridList';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 import Tooltip from '@material-ui/core/Tooltip';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
+import FormLabel from '@material-ui/core/FormLabel';
+import FormControl from '@material-ui/core/FormControl';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Radio from '@material-ui/core/Radio';
 // import { FixedSizeGrid } from 'react-window';
 
 const fsAsync = fs.promises;
@@ -50,12 +54,15 @@ type Props = {
 
 
 let tags: Set<string> = new Set<string>();
+let tagCounts: Map<string, number> = new Map<string, number>();
+let tagsOrderByCount: [string, number][] = [];
 let categories: Set<string> = new Set<string>();
 let vaultData: any[] = [];
 let assetData: any[] = [];
 let loadedAssetId: string[] = [];
 let fakeJar: { [x: string]: any; } = {};
 let loginWindow: Electron.BrowserWindow;
+let category = '';
 
 function Copyright() {
   return (
@@ -174,9 +181,7 @@ function isInVault(vault: any[], el: any) {
 
 async function collectTags() {
   for (const assetInfo of assetData) {
-    if (assetInfo.data.allTags) {
-      continue;
-    }
+
     let assetDataPath = path.join(assetDataFolder, `${assetInfo.data.id}.json`);
 
     let myTags: Set<string> = new Set<string>();
@@ -206,11 +211,25 @@ async function collectTags() {
     // console.log(assetInfo.data.allTags);
     for (const myTag of myTags) {
       tags.add(myTag);
+      if (tagCounts.has(myTag)) {
+        let oldCount = tagCounts.get(myTag);
+        if (!oldCount) {
+          oldCount = 0;
+        }
+        tagCounts.set(myTag, oldCount + 1);
+      } else {
+        tagCounts.set(myTag, 1);
+      }
+    }
+
+    if (assetInfo.data.allTags) {
+      continue;
     }
     await fsAsync.writeFile(assetDataPath, JSON.stringify(assetInfo));
 
   }
-
+  tagsOrderByCount = [...tagCounts.entries()].sort(([_a1, a2], [_a2, b2]) => b2 - a2);
+  console.log(tagsOrderByCount);
   //
   // console.log(tags);
   // console.log(categories);
@@ -531,6 +550,8 @@ export default function Counter(props: Props) {
 
   const [filter, setFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState('');
+
 
   let initialState: any[] = [];
   const [filteredData, setFilteredData] = useState(initialState);
@@ -549,12 +570,17 @@ export default function Counter(props: Props) {
       }
       const lowercasedFilter = filter.toLowerCase();
       const lowercasedCategoryFilter = categoryFilter.toLowerCase();
+      const lowercasedTypeFilter = typeFilter.toLowerCase();
       let data = assetData;
       if (lowercasedCategoryFilter.trim() !== '') {
         data = assetData
           .filter(value => value.data.categories
             .map((x: any) => x.name.toLowerCase())
             .some((v: any) => v.includes(lowercasedCategoryFilter)));
+      }
+      if (lowercasedTypeFilter.trim() !== '') {
+        data = data
+          .filter(value => value.data.distributionMethod?.toLowerCase().includes(lowercasedTypeFilter));
       }
       if (lowercasedFilter.trim() !== '') {
         data = data
@@ -566,59 +592,12 @@ export default function Counter(props: Props) {
     };
 
     fetchData();
-  }, [filter, categoryFilter]);
+  }, [filter, categoryFilter,typeFilter]);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     setFilter(event.target.value);
   }
 
-  // console.log(vaultData);
-  // function Cell(props: { columnIndex: any, rowIndex: any, style: any }) {
-  //   let { columnIndex, rowIndex, style } = props;
-  //   let item = {
-  //     data:{
-  //       id:'',
-  //       thumbnail: '',
-  //       title: '',
-  //       description: '',
-  //       allTags: ['']
-  //     }
-  //   }
-  //   let index = columnIndex + rowIndex * 3;
-  //   if (filteredData.length>index) {
-  //      item = filteredData[index]
-  //   }
-  //   return (
-  //     <Grid item key={item.data.id} xs={12} sm={6} md={4} style={style}>
-  //       <Card className={classes.card}>
-  //         <CardMedia
-  //           className={classes.cardMedia}
-  //           image={item.data.thumbnail}
-  //           title={item.data.title}
-  //         />
-  //         <CardContent className={classes.cardContent}>
-  //           <Typography color="primary" gutterBottom variant="h5" component="h2">
-  //             {item.data.title}
-  //           </Typography>
-  //           <Typography>
-  //             {item.data.description}
-  //           </Typography>
-  //           <Typography className={classes.cardTitle} color="textSecondary" gutterBottom>
-  //             {item.data.allTags.join(' ')}
-  //           </Typography>
-  //         </CardContent>
-  //         <CardActions>
-  //           <Button size="small" color="primary">
-  //             View
-  //           </Button>
-  //           <Button size="small" color="primary">
-  //             Edit
-  //           </Button>
-  //         </CardActions>
-  //       </Card>
-  //     </Grid>
-  //   );
-  // }
 
   return (
     <React.Fragment>
@@ -676,19 +655,152 @@ export default function Counter(props: Props) {
                   </Button>
                 </Grid>
               </Grid>
-              <Grid container spacing={2} justify="center">
-                <ButtonGroup variant="contained" color="primary" aria-label="contained primary button group">
-                  <Button onClick={() => {
-                    setCategoryFilter('code plugins');
-                  }}>Code Plugins</Button>
-                  <Button onClick={() => {
-                    setCategoryFilter('animations');
-                  }}>Animations</Button>
-                  <Button onClick={() => {
-                    setCategoryFilter('');
-                  }}>Reset</Button>
-                </ButtonGroup>
-              </Grid>
+
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Category</FormLabel>
+                <RadioGroup row aria-label="position" name="position"
+                            onChange={(_, value) => {
+                              setCategoryFilter(value);
+                            }} defaultValue="">
+                  <FormControlLabel
+                    value="2d assets"
+                    control={<Radio color="primary"/>}
+                    label="2d assets"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="animations"
+                    control={<Radio color="primary"/>}
+                    label="animations"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="animations"
+                    control={<Radio color="primary"/>}
+                    label="architectural visualization"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="blueprints"
+                    control={<Radio color="primary"/>}
+                    label="blueprints"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="characters"
+                    control={<Radio color="primary"/>}
+                    label="characters"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="code plugins"
+                    control={<Radio color="primary"/>}
+                    label="code plugins"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="environments"
+                    control={<Radio color="primary"/>}
+                    label="environments"
+                    labelPlacement="start"
+                  />
+
+                  <FormControlLabel
+                    value="epic content"
+                    control={<Radio color="primary"/>}
+                    label="epic content"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="materials"
+                    control={<Radio color="primary"/>}
+                    label="materials"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="megascans"
+                    control={<Radio color="primary"/>}
+                    label="megascans"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="music"
+                    control={<Radio color="primary"/>}
+                    label="music"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="props"
+                    control={<Radio color="primary"/>}
+                    label="props"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="sound effects"
+                    control={<Radio color="primary"/>}
+                    label="sound effects"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="textures"
+                    control={<Radio color="primary"/>}
+                    label="textures"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="visual effects"
+                    control={<Radio color="primary"/>}
+                    label="visual effects"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="weapons"
+                    control={<Radio color="primary"/>}
+                    label="weapons"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value=""
+                    control={<Radio color="primary"/>}
+                    label="*"
+                    labelPlacement="start"
+                  />
+
+
+                </RadioGroup>
+              </FormControl>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Type</FormLabel>
+                <RadioGroup row aria-label="position" name="position"
+                            onChange={(_, value) => {
+                              setTypeFilter(value);
+                            }} defaultValue="">
+                  <FormControlLabel
+                    value="ASSET_PACK"
+                    control={<Radio color="primary"/>}
+                    label="ASSET_PACK"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="COMPLETE_PROJECT"
+                    control={<Radio color="primary"/>}
+                    label="COMPLETE_PROJECT"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="ENGINE_PLUGIN"
+                    control={<Radio color="primary"/>}
+                    label="ENGINE_PLUGIN"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value=""
+                    control={<Radio color="primary"/>}
+                    label="*"
+                    labelPlacement="start"
+                  />
+                </RadioGroup>
+              </FormControl>
             </div>
           </Container>
         </div>
@@ -721,93 +833,7 @@ export default function Counter(props: Props) {
               ))}
             </GridList>
           </div>
-          {/*<Grid container spacing={1}>*/}
-          {/*  /!*<div className={classes.chipRoot}>*!/*/}
-          {/*  {filteredData.map((item) => (*/}
-          {/*    // <Grid item xs={3}>*/}
-          {/*    //   <Chip key={item.data.id}*/}
-          {/*    //         avatar={<Avatar alt={item.data.title}*/}
-          {/*    //                         src={item.data.thumbnail}/>}*/}
-          {/*    //         label={item.data.title}*/}
-          {/*    //         component="a"*/}
-          {/*    //         href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}*/}
-          {/*    //         clickable*/}
-          {/*    //   />*/}
-          {/*    // </Grid>*/}
-          {/*    <Grid item xs={3} key={item.data.id}>*/}
-          {/*      <Link underline='none' href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}><Card*/}
-          {/*        className={classes.root}>*/}
-          {/*        <CardMedia*/}
-
-          {/*          className={classes.cover}*/}
-          {/*          image={item.data.thumbnail}*/}
-          {/*          title={item.data.description}*/}
-          {/*        />*/}
-          {/*        <div className={classes.details}>*/}
-          {/*          <CardContent className={classes.content}>*/}
-          {/*            <Typography style={{*/}
-          {/*              height: 60,*/}
-          {/*              width: 150*/}
-          {/*            }} variant="body1">*/}
-          {/*              {item.data.title}*/}
-          {/*            </Typography>*/}
-          {/*            <Typography variant="body2" color="textSecondary">*/}
-          {/*              {item.data.category}*/}
-          {/*            </Typography>*/}
-          {/*          </CardContent>*/}
-          {/*        </div>*/}
-
-          {/*      </Card></Link>*/}
-          {/*    </Grid>*/}
-          {/*  ))}*/}
-          {/*</Grid>*/}
-          {/*</div>*/}
         </Paper>
-        {/*<Container className={classes.cardGrid} maxWidth={false}>*/}
-        {/*  /!* End hero unit *!/*/}
-        {/*  <Grid container spacing={1}>*/}
-        {/*    /!*<FixedSizeGrid*!/*/}
-        {/*    /!*  columnCount={3}*!/*/}
-        {/*    /!*  columnWidth={100}*!/*/}
-        {/*    /!*  height={150}*!/*/}
-        {/*    /!*  rowCount={1000}*!/*/}
-        {/*    /!*  rowHeight={35}*!/*/}
-        {/*    /!*  width={300}*!/*/}
-        {/*    /!*>*!/*/}
-        {/*    /!*  {Cell}*!/*/}
-        {/*    /!*</FixedSizeGrid>*!/*/}
-        {/*    {filteredData.map((item) => (*/}
-        {/*      <Grid item key={item.data.id} xs={12} sm={6} md={4}>*/}
-        {/*        <Card className={classes.card}>*/}
-        {/*          <CardMedia*/}
-        {/*            className={classes.cardMedia}*/}
-        {/*            image={item.data.thumbnail}*/}
-        {/*            title={item.data.title}*/}
-        {/*          />*/}
-        {/*          <CardContent className={classes.cardContent}>*/}
-        {/*            <Typography color="primary" gutterBottom variant="h5" component="h2">*/}
-        {/*              {item.data.title}*/}
-        {/*            </Typography>*/}
-        {/*            <Typography>*/}
-        {/*              {item.data.description}*/}
-        {/*            </Typography>*/}
-        {/*            <Typography className={classes.cardTitle} color="textSecondary" gutterBottom>*/}
-        {/*              {item.data.allTags.join(' ')}*/}
-        {/*            </Typography>*/}
-        {/*          </CardContent>*/}
-        {/*          <CardActions>*/}
-        {/*            <Button size="small" color="primary">*/}
-        {/*              View*/}
-        {/*            </Button>*/}
-        {/*            <Button size="small" color="primary">*/}
-        {/*              Edit*/}
-        {/*            </Button>*/}
-        {/*          </CardActions>*/}
-        {/*        </Card>*/}
-        {/*      </Grid>*/}
-        {/*    ))}*/}
-        {/*  </Grid>*/}
-        {/*</Container>*/}
       </main>
       {/* Footer */}
       <footer className={classes.footer}>
