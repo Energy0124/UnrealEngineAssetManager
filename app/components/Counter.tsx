@@ -551,6 +551,8 @@ export default function Counter(props: Props) {
   const [filter, setFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [sortBy, setSortBy] = useState('');
+  const [ascending, setAscending] = useState(false);
 
 
   let initialState: any[] = [];
@@ -588,11 +590,29 @@ export default function Counter(props: Props) {
             return item.data.allTags.some((t: string) => t.includes(lowercasedFilter));
           });
       }
-      setFilteredData(data.reverse());
+      let sortedData: any[] = data;
+      switch (sortBy) {
+        case '':
+          break;
+        case 'purchaseDate':
+          break;
+        case 'price':
+          sortedData = data.sort((a, b) => a.data.priceValue - b.data.priceValue);
+          break;
+        case 'alphabetical':
+          sortedData = data.sort((a, b) => (a.data.title.toLowerCase().localeCompare(b.data.title.toLowerCase())));
+          break;
+        default:
+          break;
+      }
+      if (!ascending) {
+        sortedData = sortedData.reverse();
+      }
+      setFilteredData(sortedData);
     };
 
     fetchData();
-  }, [filter, categoryFilter,typeFilter]);
+  }, [filter, categoryFilter, typeFilter, sortBy, ascending]);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
     setFilter(event.target.value);
@@ -797,6 +817,58 @@ export default function Counter(props: Props) {
                     value=""
                     control={<Radio color="primary"/>}
                     label="*"
+                    labelPlacement="start"
+                  />
+                </RadioGroup>
+              </FormControl>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Type</FormLabel>
+                <RadioGroup row aria-label="position" name="position"
+                            onChange={(_, value) => {
+                              setSortBy(value);
+                            }} defaultValue="">
+                  <FormControlLabel
+                    value="purchaseDate"
+                    control={<Radio color="primary"/>}
+                    label="purchaseDate"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="price"
+                    control={<Radio color="primary"/>}
+                    label="price"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="alphabetical"
+                    control={<Radio color="primary"/>}
+                    label="alphabetical"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value=""
+                    control={<Radio color="primary"/>}
+                    label="Default"
+                    labelPlacement="start"
+                  />
+                </RadioGroup>
+              </FormControl>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Type</FormLabel>
+                <RadioGroup row aria-label="position" name="position"
+                            onChange={(_, value) => {
+                              setAscending(value === 'true');
+                            }} defaultValue="false">
+                  <FormControlLabel
+                    value="true"
+                    control={<Radio color="primary"/>}
+                    label="ascending"
+                    labelPlacement="start"
+                  />
+                  <FormControlLabel
+                    value="false"
+                    control={<Radio color="primary"/>}
+                    label="descending"
                     labelPlacement="start"
                   />
                 </RadioGroup>
