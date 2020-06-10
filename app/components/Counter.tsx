@@ -540,6 +540,7 @@ async function login() {
   });
 }
 
+let filterCache = '';
 
 export default function Counter(props: Props) {
   // const {
@@ -570,6 +571,9 @@ export default function Counter(props: Props) {
         await collectTags();
         // console.log(vaultData);
       }
+
+      console.log(filter);
+
       const lowercasedFilter = filter.toLowerCase();
       const lowercasedCategoryFilter = categoryFilter.toLowerCase();
       const lowercasedTypeFilter = typeFilter.toLowerCase();
@@ -590,32 +594,39 @@ export default function Counter(props: Props) {
             return item.data.allTags.some((t: string) => t.includes(lowercasedFilter));
           });
       }
-      let sortedData: any[] = data;
+      let sortedData: any[] = [];
+      console.log(sortBy);
       switch (sortBy) {
         case '':
+          sortedData = [...data];
           break;
         case 'purchaseDate':
+          sortedData = [...data];
           break;
         case 'price':
-          sortedData = data.sort((a, b) => a.data.priceValue - b.data.priceValue);
+          sortedData = [...data].sort((a, b) => a.data.priceValue - b.data.priceValue);
           break;
         case 'alphabetical':
-          sortedData = data.sort((a, b) => (a.data.title.toLowerCase().localeCompare(b.data.title.toLowerCase())));
+          sortedData = [...data].sort((a, b) => (a.data.title.toLowerCase().localeCompare(b.data.title.toLowerCase())));
           break;
         default:
+          sortedData = [...data];
           break;
       }
       if (!ascending) {
         sortedData = sortedData.reverse();
       }
       setFilteredData(sortedData);
+      console.log(sortedData);
     };
 
     fetchData();
   }, [filter, categoryFilter, typeFilter, sortBy, ascending]);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    setFilter(event.target.value);
+    let value = event.target.value;
+    filterCache = value;
+    setFilter(value);
   }
 
 
