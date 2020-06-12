@@ -650,7 +650,7 @@ export default function Manager(props: Props) {
       <main>
         {/* Hero unit */}
         <div className={classes.heroContent}>
-          <Container maxWidth="sm">
+          <Container >
             <Typography component="h1" variant="h2" align="center" color="textPrimary" gutterBottom>
               Unreal Asset Manager
             </Typography>
@@ -840,7 +840,7 @@ export default function Manager(props: Props) {
                 </RadioGroup>
               </FormControl>
               <FormControl component="fieldset">
-                <FormLabel component="legend">Type</FormLabel>
+                <FormLabel component="legend">Sort By</FormLabel>
                 <RadioGroup row aria-label="position" name="position"
                             onChange={(_, value) => {
                               setSortBy(value);
@@ -872,7 +872,7 @@ export default function Manager(props: Props) {
                 </RadioGroup>
               </FormControl>
               <FormControl component="fieldset">
-                <FormLabel component="legend">Type</FormLabel>
+                <FormLabel component="legend">Order</FormLabel>
                 <RadioGroup row aria-label="position" name="position"
                             onChange={(_, value) => {
                               setAscending(value === 'true');
