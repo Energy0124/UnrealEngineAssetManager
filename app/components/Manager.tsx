@@ -69,7 +69,7 @@ function Copyright() {
     <Typography variant="body2" color="textSecondary" align="center">
       {'Copyright © '}
       <Link color="inherit" href="https://material-ui.com/">
-        Your Website
+        Energy0124
       </Link>{' '}
       {new Date().getFullYear()}
       {'.'}
@@ -542,7 +542,7 @@ async function login() {
 
 let filterCache = '';
 
-export default function Counter(props: Props) {
+export default function Manager(props: Props) {
   // const {
   //   counter
   // } = props;
@@ -635,12 +635,12 @@ export default function Counter(props: Props) {
       <CssBaseline/>
       <AppBar position="relative">
         <Toolbar>
-          <IconButton color="secondary" aria-label="go back" component={RouterLink} to={routes.HOME}>
-            <ArrowBackIcon className={classes.icon}/>
-          </IconButton>
-          <CameraIcon className={classes.icon}/>
+          {/*<IconButton color="secondary" aria-label="go back" component={RouterLink} to={routes.HOME}>*/}
+          {/*  <ArrowBackIcon className={classes.icon}/>*/}
+          {/*</IconButton>*/}
+          {/*<CameraIcon className={classes.icon}/>*/}
           <Typography variant="h6" color="inherit" noWrap>
-            Album layout
+            Unreal Asset Manager
           </Typography>
         </Toolbar>
       </AppBar>
@@ -649,14 +649,18 @@ export default function Counter(props: Props) {
         <div className={classes.heroContent}>
           <Container maxWidth="sm">
             <Typography component="h1" variant="h2" align="center" color="textPrimary" gutterBottom>
-              UE Asset Manager
+              Unreal Asset Manager
             </Typography>
             <Typography variant="h5" align="center" color="textSecondary" paragraph>
               Too Many Assets
             </Typography>
             <Typography component={'span'} variant="h5" align="center" color="textSecondary" paragraph>
-              <TextField value={filter} onChange={handleChange} id="outlined-basic" label="Filter"
-                         variant="outlined"/>
+              <Grid container spacing={2} justify="center">
+                <Grid item>
+                  <TextField value={filter} onChange={handleChange} id="outlined-basic" label="Filter"
+                             variant="outlined"/>
+                </Grid>
+              </Grid>
             </Typography>
             <div className={classes.heroButtons}>
               <Grid container spacing={2} justify="center">
@@ -921,10 +925,10 @@ export default function Counter(props: Props) {
       {/* Footer */}
       <footer className={classes.footer}>
         <Typography variant="h6" align="center" gutterBottom>
-          Footer
+          Fin.
         </Typography>
         <Typography variant="subtitle1" align="center" color="textSecondary" component="p">
-          Something here to give the footer a purpose!
+          Don't look at me, baka!
         </Typography>
         <Copyright/>
       </footer>

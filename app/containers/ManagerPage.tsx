@@ -1,6 +1,6 @@
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
-import Counter from '../components/Counter';
+import Manager from '../components/Manager';
 import {
   increment,
   decrement,
@@ -27,4 +27,4 @@ function mapDispatchToProps(dispatch: Dispatch) {
   );
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Counter);
+export default connect(mapStateToProps, mapDispatchToProps)(Manager);
