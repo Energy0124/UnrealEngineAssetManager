@@ -569,9 +569,18 @@ export default function Manager(props: Props) {
       // console.log(vaultData === []);
       if (vaultData.length <= 0) {
         console.log('do downloadVaultData');
-        await downloadVaultData(false);
-        await downloadAssetsData();
-        await collectTags();
+        try {
+          await downloadVaultData(false);
+          await downloadAssetsData();
+          await collectTags();
+        } catch (e) {
+          console.log(e);
+          await login();
+          // retry
+          await downloadVaultData(false);
+          await downloadAssetsData();
+          await collectTags();
+        }
         // console.log(vaultData);
       }
 
@@ -650,7 +659,7 @@ export default function Manager(props: Props) {
       <main>
         {/* Hero unit */}
         <div className={classes.heroContent}>
-          <Container >
+          <Container>
             <Typography component="h1" variant="h2" align="center" color="textPrimary" gutterBottom>
               Unreal Asset Manager
             </Typography>
