@@ -1,8 +1,8 @@
 {
   "name": "electron-react-boilerplate",
-  "productName": "ElectronReact",
+  "productName": "UnrealAssetManager",
   "version": "1.1.0",
-  "description": "Electron application boilerplate based on React, React Router, Webpack, React Hot Loader for rapid application development",
+  "description": "A manager for organizing your Unreal Engine assets, search with tags, and more!",
   "scripts": {
     "build": "concurrently \"yarn build-main\" \"yarn build-renderer\"",
     "build-dll": "cross-env NODE_ENV=development webpack --config ./configs/webpack.config.renderer.dev.dll.babel.js --colors",
@@ -52,8 +52,8 @@
     ]
   },
   "build": {
-    "productName": "ElectronReact",
-    "appId": "org.develar.ElectronReact",
+    "productName": "UnrealAssetManager",
+    "appId": "com.energy0124.UnrealAssetManager",
     "files": [
       "dist/",
       "node_modules/",
@@ -103,12 +103,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
+    "url": "git+https://github.com/Energy0124/UnrealEngineAssetManager.git"
   },
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://electron-react-boilerplate.js.org"
+    "name": "Energy0124",
+    "email": "energystar.0124@gmail.com",
+    "url": "https://energy0124.com"
   },
   "contributors": [
     {
@@ -138,7 +138,7 @@
     "hot",
     "reload"
   ],
-  "homepage": "https://github.com/electron-react-boilerplate/electron-react-boilerplate#readme",
+  "homepage": "https://github.com/Energy0124/UnrealEngineAssetManager",
   "jest": {
     "testURL": "http://localhost/",
     "moduleNameMapper": {

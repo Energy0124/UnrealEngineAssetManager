@@ -291,6 +291,9 @@ async function downloadVaultData(forceUpdate: boolean) {
   let vault: any[];
   vaultData = [];
   let vaultString: string = '';
+  if (!fs.existsSync(cacheDir)) {
+    await fsAsync.mkdir(cacheDir);
+  }
   if (fs.existsSync(vaultPath)) {
     vaultString = await fsAsync.readFile(vaultPath, 'utf8');
   }
