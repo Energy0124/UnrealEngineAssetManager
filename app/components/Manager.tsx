@@ -271,15 +271,37 @@ async function downloadAssetsData() {
 
     let url = `https://www.unrealengine.com/marketplace/api/assets/asset/${vaultDatum.id}`;
     console.log(`downloading data of ${vaultDatum.title} from ${url}`);
-    let respond = await axios.get(url, {
-      headers: {
-        // Cookie: getWebCookieString()
+    try {
+      let respond = await axios.get(url, {
+        headers: {
+          // Cookie: getWebCookieString()
+        }
+      });
+      let data = respond.data.data;
+      assetData.push(data);
+      // console.log(data);
+      await fsAsync.writeFile(assetDataPath, JSON.stringify(data));
+    } catch (e) {
+      console.log(e);
+      console.log(`Error loading asset data from: ${url}`);
+      console.log(`Try to download vault item data instead`);
+      url = `https://www.unrealengine.com/marketplace/api/assets/item/${vaultDatum.catalogItemId}`;
+      console.log(`downloading data of ${vaultDatum.title} from ${url}`);
+      try {
+        let respond = await axios.get(url, {
+          headers: {
+            // Cookie: getWebCookieString()
+          }
+        });
+        let data = respond.data.data;
+        assetData.push(data);
+        // console.log(data);
+        await fsAsync.writeFile(assetDataPath, JSON.stringify(data));
+      } catch (e) {
+        console.log(e);
+        console.log(`Error loading vault item data from: ${url}`);
       }
-    });
-    let data = respond.data.data;
-    assetData.push(data);
-    // console.log(data);
-    await fsAsync.writeFile(assetDataPath, JSON.stringify(data));
+    }
   }
   console.log(`done loading assetData`);
   console.log(assetData);
@@ -545,6 +567,22 @@ async function login() {
 
 let filterCache = '';
 
+async function updateVault(force:boolean) {
+  console.log('do downloadVaultData');
+  try {
+    await downloadVaultData(force);
+    await downloadAssetsData();
+    await collectTags();
+  } catch (e) {
+    console.log(e);
+    await login();
+    // retry
+    await downloadVaultData(force);
+    await downloadAssetsData();
+    await collectTags();
+  }
+}
+
 export default function Manager(props: Props) {
   // const {
   //   counter
@@ -568,19 +606,7 @@ export default function Manager(props: Props) {
       // console.log(vaultData);
       // console.log(vaultData === []);
       if (vaultData.length <= 0) {
-        console.log('do downloadVaultData');
-        try {
-          await downloadVaultData(false);
-          await downloadAssetsData();
-          await collectTags();
-        } catch (e) {
-          console.log(e);
-          await login();
-          // retry
-          await downloadVaultData(false);
-          await downloadAssetsData();
-          await collectTags();
-        }
+        await updateVault(false);
         // console.log(vaultData);
       }
 
@@ -699,6 +725,11 @@ export default function Manager(props: Props) {
                 <Grid item>
                   <Button onClick={collectTags} variant="outlined" color="primary">
                     collectTags
+                  </Button>
+                </Grid>
+                <Grid item>
+                  <Button onClick={() => updateVault(true)} variant="outlined" color="primary">
+                    Force updateVault
                   </Button>
                 </Grid>
               </Grid>
