@@ -35,7 +35,8 @@ import FormLabel from '@material-ui/core/FormLabel';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Radio from '@material-ui/core/Radio';
-// import { FixedSizeGrid } from 'react-window';
+import { Grid as VirtualGrid, WindowScroller, AutoSizer } from 'react-virtualized';
+import 'react-virtualized/styles.css';
 
 const fsAsync = fs.promises;
 const axios = require('axios').default;
@@ -567,7 +568,7 @@ async function login() {
 
 let filterCache = '';
 
-async function updateVault(force:boolean) {
+async function updateVault(force: boolean) {
   console.log('do downloadVaultData');
   try {
     await downloadVaultData(force);
@@ -667,6 +668,50 @@ export default function Manager(props: Props) {
     setFilter(value);
   }
 
+  let countPerRow = 3;
+
+  // let rowCount = 1;
+  function onResize({ width }) {
+    countPerRow = Math.floor(width / 180);
+    // rowCount = Math.ceil(filteredData.length / countPerRow);
+  }
+
+  function cellRenderer({ columnIndex, key, rowIndex, style }) {
+    const imgStyles = {
+      margin: 'auto',
+      display: 'block',
+      maxWidth: '100%',
+      maxHeight: '100%'
+    };
+    let item = filteredData[columnIndex + rowIndex * countPerRow];
+    if (!item) {
+      return (<div key={key} style={style}/>);
+    }
+    return (
+      <div key={key} style={style}>
+
+        <img style={imgStyles} title={item.data.title} src={item.data.thumbnail} alt={item.data.title}/>
+
+        <GridListTileBar
+          title={
+            <Link underline='none' color='inherit'
+                  href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}>
+              <b>{item.data.title}</b>
+            </Link>}
+          subtitle={<Tooltip
+            title={item.data.allTags.join(', ')}><span>{item.data.categories.map((x: any) => x.name).join(', ')}</span></Tooltip>}
+          actionIcon={
+            <Tooltip title={item.data.description}>
+              <IconButton aria-label={item.data.title} className={classes.icon}>
+                <InfoIcon style={{ color: 'white' }}/>
+              </IconButton>
+            </Tooltip>
+          }
+        />
+
+      </div>
+    );
+  }
 
   return (
     <React.Fragment>
@@ -935,6 +980,37 @@ export default function Manager(props: Props) {
           </Container>
         </div>
         <Paper>
+          <WindowScroller>
+            {({ height, isScrolling, onChildScroll, scrollTop }) => (
+              <AutoSizer
+                disableHeight
+                height={height}
+                scrollTop={scrollTop}
+                onResize={onResize}
+              >
+                {({ width }) => {
+                  countPerRow = Math.floor(width / 180);
+                  const rowCount = Math.ceil(filteredData.length / countPerRow);
+
+                  return (<VirtualGrid
+                    autoHeight
+                    width={width}
+                    height={height}
+                    isScrolling={isScrolling}
+                    onScroll={onChildScroll}
+                    columnCount={countPerRow}
+                    columnWidth={180}
+                    rowCount={rowCount}
+                    rowHeight={180}
+                    cellRenderer={cellRenderer}
+                    scrollTop={scrollTop}
+                  />);
+                }}
+              </AutoSizer>
+            )}
+          </WindowScroller>
+        </Paper>
+        {/*        <Paper>
           <div className={classes.root}>
             <GridList cellHeight={180} cols={6} className={classes.gridList}>
               {filteredData.map((item) => (
@@ -963,7 +1039,7 @@ export default function Manager(props: Props) {
               ))}
             </GridList>
           </div>
-        </Paper>
+        </Paper>*/}
       </main>
       {/* Footer */}
       <footer className={classes.footer}>

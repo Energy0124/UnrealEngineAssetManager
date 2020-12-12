@@ -195,6 +195,7 @@
     "@types/react-router": "^5.1.7",
     "@types/react-router-dom": "^5.1.5",
     "@types/react-test-renderer": "^16.9.2",
+    "@types/react-virtualized": "^9.21.10",
     "@types/redux-logger": "^3.0.7",
     "@types/sinon": "^7.5.2",
     "@types/tapable": "^1.0.5",
@@ -276,7 +277,6 @@
     "@hot-loader/react-dom": "^16.13.0",
     "@material-ui/core": "^4.10.0",
     "@material-ui/icons": "^4.9.1",
-    "@types/react-window": "^1.8.2",
     "axios": "^0.19.2",
     "connected-react-router": "^6.8.0",
     "core-js": "^3.6.5",
@@ -291,7 +291,7 @@
     "react-redux": "^7.1.3",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
-    "react-window": "^1.8.5",
+    "react-virtualized": "^9.22.2",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
     "source-map-support": "^0.5.16"
@@ -335,8 +335,6 @@
     ]
   },
   "husky": {
-    "hooks": {
-
-    }
+    "hooks": {}
   }
 }
