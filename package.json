@@ -1,5 +1,5 @@
 {
-  "name": "UnrealAssetManager",
+  "name": "unreal-asset-manager",
   "productName": "UnrealAssetManager",
   "version": "1.2.0",
   "description": "A manager for organizing your Unreal Engine assets, search with tags, and more!",
@@ -111,20 +111,10 @@
     "url": "https://energy0124.com"
   },
   "contributors": [
-    {
-      "name": "Vikram Rangaraj",
-      "email": "vikr01@icloud.com",
-      "url": "https://github.com/vikr01"
-    },
-    {
-      "name": "Amila Welihinda",
-      "email": "amilajack@gmail.com",
-      "url": "https://github.com/amilajack"
-    }
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/electron-react-boilerplate/electron-react-boilerplate/issues"
+    "url": "https://github.com/Energy0124/UnrealEngineAssetManager/issues"
   },
   "keywords": [
     "electron",
@@ -302,7 +292,6 @@
     "yarn": ">=0.21.3"
   },
   "collective": {
-    "url": "https://opencollective.com/electron-react-boilerplate-594"
   },
   "browserslist": [
     "extends browserslist-config-erb"
