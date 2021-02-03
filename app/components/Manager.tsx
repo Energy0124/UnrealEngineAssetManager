@@ -570,6 +570,7 @@ async function updateVault(force: boolean) {
   } catch (e) {
     console.log(e);
     await login();
+    printCookie()
     // retry
     await downloadVaultData(force);
     await downloadAssetsData();
@@ -786,49 +787,49 @@ export default function Manager(props: Props) {
                     login
                   </Button>
                 </Grid>
-                <Grid item>
-                  <Button
-                    onClick={printCookie}
-                    variant="outlined"
-                    color="primary"
-                  >
-                    printCookie
-                  </Button>
-                </Grid>
-                <Grid item>
-                  <Button
-                    onClick={() => downloadVaultData(false)}
-                    variant="outlined"
-                    color="primary"
-                  >
-                    downloadVaultData
-                  </Button>
-                </Grid>
-                <Grid item>
-                  <Button
-                    onClick={downloadAssetsData}
-                    variant="outlined"
-                    color="primary"
-                  >
-                    downloadAssetsData
-                  </Button>
-                </Grid>
-                <Grid item>
-                  <Button
-                    onClick={collectTags}
-                    variant="outlined"
-                    color="primary"
-                  >
-                    collectTags
-                  </Button>
-                </Grid>
+                {/*<Grid item>*/}
+                {/*  <Button*/}
+                {/*    onClick={printCookie}*/}
+                {/*    variant="outlined"*/}
+                {/*    color="primary"*/}
+                {/*  >*/}
+                {/*    printCookie*/}
+                {/*  </Button>*/}
+                {/*</Grid>*/}
+                {/*<Grid item>*/}
+                {/*  <Button*/}
+                {/*    onClick={() => downloadVaultData(false)}*/}
+                {/*    variant="outlined"*/}
+                {/*    color="primary"*/}
+                {/*  >*/}
+                {/*    downloadVaultData*/}
+                {/*  </Button>*/}
+                {/*</Grid>*/}
+                {/*<Grid item>*/}
+                {/*  <Button*/}
+                {/*    onClick={downloadAssetsData}*/}
+                {/*    variant="outlined"*/}
+                {/*    color="primary"*/}
+                {/*  >*/}
+                {/*    downloadAssetsData*/}
+                {/*  </Button>*/}
+                {/*</Grid>*/}
+                {/*<Grid item>*/}
+                {/*  <Button*/}
+                {/*    onClick={collectTags}*/}
+                {/*    variant="outlined"*/}
+                {/*    color="primary"*/}
+                {/*  >*/}
+                {/*    collectTags*/}
+                {/*  </Button>*/}
+                {/*</Grid>*/}
                 <Grid item>
                   <Button
                     onClick={() => updateVault(true)}
                     variant="outlined"
                     color="primary"
                   >
-                    Force updateVault
+                    Update Vault
                   </Button>
                 </Grid>
               </Grid>
