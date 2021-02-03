@@ -1,27 +1,16 @@
 import { bindActionCreators, Dispatch } from 'redux';
 import { connect } from 'react-redux';
 import Manager from '../components/Manager';
-import {
-  increment,
-  decrement,
-  incrementIfOdd,
-  incrementAsync
-} from '../actions/counter';
-import { counterStateType } from '../reducers/types';
 
-function mapStateToProps(state: counterStateType) {
+
+function mapStateToProps() {
   return {
-    counter: state.counter
   };
 }
 
 function mapDispatchToProps(dispatch: Dispatch) {
   return bindActionCreators(
     {
-      increment,
-      decrement,
-      incrementIfOdd,
-      incrementAsync
     },
     dispatch
   );

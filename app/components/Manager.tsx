@@ -1,15 +1,8 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import routes from '../constants/routes.json';
 import fs from 'fs';
 import path from 'path';
 import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
-import CameraIcon from '@material-ui/icons/PhotoCamera';
-import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
-import CardContent from '@material-ui/core/CardContent';
-import CardMedia from '@material-ui/core/CardMedia';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import Toolbar from '@material-ui/core/Toolbar';
@@ -18,52 +11,45 @@ import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 import Link from '@material-ui/core/Link';
 import { IconButton, RadioGroup } from '@material-ui/core';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import InfoIcon from '@material-ui/icons/InfoOutlined';
 import TextField from '@material-ui/core/TextField';
-import Chip from '@material-ui/core/Chip';
-import Avatar from '@material-ui/core/Avatar';
 import Paper from '@material-ui/core/Paper';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import ListSubheader from '@material-ui/core/ListSubheader';
-import GridListTile from '@material-ui/core/GridListTile';
-import GridList from '@material-ui/core/GridList';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 import Tooltip from '@material-ui/core/Tooltip';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
 import FormLabel from '@material-ui/core/FormLabel';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Radio from '@material-ui/core/Radio';
-import { Grid as VirtualGrid, WindowScroller, AutoSizer } from 'react-virtualized';
+import {
+  Grid as VirtualGrid,
+  WindowScroller,
+  AutoSizer
+} from 'react-virtualized';
 import 'react-virtualized/styles.css';
 
 const fsAsync = fs.promises;
 const axios = require('axios').default;
 
 const electron = require('electron');
-var cacheDir = path.join('.', 'cache');
-var vaultPath = path.join(cacheDir, 'vault.json');
-var assetDataFolder = path.join(cacheDir, 'assets');
+
+const cacheDir = path.join('.', 'cache');
+const vaultPath = path.join(cacheDir, 'vault.json');
+const assetDataFolder = path.join(cacheDir, 'assets');
 
 type Props = {
-
   filter: string;
   counter: number;
-
 };
 
-
-let tags: Set<string> = new Set<string>();
-let tagCounts: Map<string, number> = new Map<string, number>();
+const tags: Set<string> = new Set<string>();
+const tagCounts: Map<string, number> = new Map<string, number>();
 let tagsOrderByCount: [string, number][] = [];
-let categories: Set<string> = new Set<string>();
+const categories: Set<string> = new Set<string>();
 let vaultData: any[] = [];
 let assetData: any[] = [];
 let loadedAssetId: string[] = [];
-let fakeJar: { [x: string]: any; } = {};
+const fakeJar: { [x: string]: any } = {};
 let loginWindow: Electron.BrowserWindow;
-let category = '';
 
 function Copyright() {
   return (
@@ -72,13 +58,12 @@ function Copyright() {
       <Link color="inherit" href="https://material-ui.com/">
         Energy0124
       </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
+      {new Date().getFullYear()}.
     </Typography>
   );
 }
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   chipRoot: {
     display: 'flex',
     justifyContent: 'center',
@@ -162,9 +147,8 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-
 function isInVault(vault: any[], el: any) {
-  var i;
+  let i;
 
   for (i = vault.length - 1; i >= 0; --i) {
     if (vault[i].catalogItemId === el.catalogItemId) {
@@ -175,22 +159,24 @@ function isInVault(vault: any[], el: any) {
   return false;
 }
 
-//no tag vault data: catalogItemId
-//https://www.unrealengine.com/marketplace/api/assets/item/da3c5430dc5846d3a0ec9aa0d631b820
-//shop data with tag: id <== use this
-//https://www.unrealengine.com/marketplace/api/assets/asset/a9ca5e1f1c9a42b59d98bccbfff06f71
+// no tag vault data: catalogItemId
+// https://www.unrealengine.com/marketplace/api/assets/item/da3c5430dc5846d3a0ec9aa0d631b820
+// shop data with tag: id <== use this
+// https://www.unrealengine.com/marketplace/api/assets/asset/a9ca5e1f1c9a42b59d98bccbfff06f71
 
 async function collectTags() {
   for (const assetInfo of assetData) {
+    const assetDataPath = path.join(
+      assetDataFolder,
+      `${assetInfo.data.id}.json`
+    );
 
-    let assetDataPath = path.join(assetDataFolder, `${assetInfo.data.id}.json`);
-
-    let myTags: Set<string> = new Set<string>();
+    const myTags: Set<string> = new Set<string>();
 
     myTags.add(assetInfo.data.title.toLowerCase());
     let cat = '';
     for (const category of assetInfo.data.categories) {
-      let c = category.name.toLowerCase();
+      const c = category.name.toLowerCase();
       myTags.add(c);
       categories.add(c);
       cat = c;
@@ -227,9 +213,10 @@ async function collectTags() {
       continue;
     }
     await fsAsync.writeFile(assetDataPath, JSON.stringify(assetInfo));
-
   }
-  tagsOrderByCount = [...tagCounts.entries()].sort(([_a1, a2], [_a2, b2]) => b2 - a2);
+  tagsOrderByCount = [...tagCounts.entries()].sort(
+    ([_a1, a2], [_a2, b2]) => b2 - a2
+  );
   console.log(tagsOrderByCount);
   //
   // console.log(tags);
@@ -247,14 +234,14 @@ async function downloadAssetsData() {
       continue;
     }
 
-    let assetDataPath = path.join(assetDataFolder, `${vaultDatum.id}.json`);
+    const assetDataPath = path.join(assetDataFolder, `${vaultDatum.id}.json`);
 
     if (fs.existsSync(assetDataPath)) {
-      let dataString = await fsAsync.readFile(assetDataPath, 'utf8');
+      const dataString = await fsAsync.readFile(assetDataPath, 'utf8');
       if (dataString.trim()) {
         // console.log(`Vault already have data, skipping data download for ${vaultDatum.title}`);
         try {
-          let data = JSON.parse(dataString);
+          const data = JSON.parse(dataString);
           loadedAssetId.push(data.data.id);
           assetData.push(data);
           // console.log(data);
@@ -266,19 +253,18 @@ async function downloadAssetsData() {
         //   data = data.data;
         //   await fsAsync.writeFile(assetDataPath, JSON.stringify(data));
         // }
-
       }
     }
 
     let url = `https://www.unrealengine.com/marketplace/api/assets/asset/${vaultDatum.id}`;
     console.log(`downloading data of ${vaultDatum.title} from ${url}`);
     try {
-      let respond = await axios.get(url, {
+      const respond = await axios.get(url, {
         headers: {
           // Cookie: getWebCookieString()
         }
       });
-      let data = respond.data.data;
+      const { data } = respond.data;
       assetData.push(data);
       // console.log(data);
       await fsAsync.writeFile(assetDataPath, JSON.stringify(data));
@@ -289,12 +275,12 @@ async function downloadAssetsData() {
       url = `https://www.unrealengine.com/marketplace/api/assets/item/${vaultDatum.catalogItemId}`;
       console.log(`downloading data of ${vaultDatum.title} from ${url}`);
       try {
-        let respond = await axios.get(url, {
+        const respond = await axios.get(url, {
           headers: {
             // Cookie: getWebCookieString()
           }
         });
-        let data = respond.data.data;
+        const { data } = respond.data;
         assetData.push(data);
         // console.log(data);
         await fsAsync.writeFile(assetDataPath, JSON.stringify(data));
@@ -306,14 +292,12 @@ async function downloadAssetsData() {
   }
   console.log(`done loading assetData`);
   console.log(assetData);
-
-
 }
 
 async function downloadVaultData(forceUpdate: boolean) {
   let vault: any[];
   vaultData = [];
-  let vaultString: string = '';
+  let vaultString = '';
   if (!fs.existsSync(cacheDir)) {
     await fsAsync.mkdir(cacheDir);
   }
@@ -344,29 +328,29 @@ async function downloadVaultData(forceUpdate: boolean) {
   let haveRemaining = true;
   while (haveRemaining) {
     console.log(dlIndex);
-    //debugger;
+    // debugger;
     if (dlTotal !== undefined && dlIndex >= dlTotal - 1) {
       haveRemaining = false;
     }
 
-    url = 'https://www.unrealengine.com/marketplace/api/assets/vault?start=' + dlIndex + '&count=' + dlCount;
+    url = `https://www.unrealengine.com/marketplace/api/assets/vault?start=${dlIndex}&count=${dlCount}`;
     console.log(`downloading from ${url}`);
     try {
-      let respond = await axios.get(url, {
+      const respond = await axios.get(url, {
         headers: {
           // Cookie: getWebCookieString()
         }
       });
-      let data = respond.data;
+      const { data } = respond;
       let addedCount = 0;
-      //debugger;
+      // debugger;
       console.log(data);
 
       dlTotal = data.data.paging.total;
 
       if (data.data && data.data.elements && data.data.elements.length) {
         for (const element of data.data.elements) {
-          ///NOTE: If you request beyond the total number in the vault, you will get back some of the last elements.
+          /// NOTE: If you request beyond the total number in the vault, you will get back some of the last elements.
           if (!isInVault(vault, element)) {
             vault.push(element);
             ++addedCount;
@@ -377,11 +361,9 @@ async function downloadVaultData(forceUpdate: boolean) {
           haveRemaining = true;
         } else {
           haveRemaining = false;
-
         }
       } else {
         haveRemaining = false;
-
       }
     } catch (e) {
       console.log(e);
@@ -396,26 +378,24 @@ async function downloadVaultData(forceUpdate: boolean) {
   console.log(vault);
 
   return vault;
-
-
 }
 
 function printCookie() {
   console.log(getWebCookieString());
 }
 
-function setCookiesFromBrowser(cookies: { name: string; value: any; }[]) {
-  cookies.forEach(function(cookie: { name: string; value: any; }) {
+function setCookiesFromBrowser(cookies: { name: string; value: any }[]) {
+  cookies.forEach(function(cookie: { name: string; value: any }) {
     fakeJar[cookie.name] = cookie.value;
   });
 }
 
 function getWebCookieString() {
-  var cookieString = '';
-  var key;
+  let cookieString = '';
+  let key;
 
   for (key in fakeJar) {
-    cookieString += key + '=' + fakeJar[key] + '; ';
+    cookieString += `${key}=${fakeJar[key]}; `;
   }
 
   return cookieString;
@@ -427,7 +407,7 @@ async function login() {
     let needsToRedirect: boolean;
     let redirectTimer;
     let atLeastOnePageLoaded = false;
-    let loginURL = 'https://www.unrealengine.com/login';
+    const loginURL = 'https://www.unrealengine.com/login';
     let currentURL = loginURL;
     let isLoggedIn: boolean;
     let cookies: any;
@@ -438,8 +418,7 @@ async function login() {
     if (loginWindow) {
       try {
         loginWindow.close();
-      } catch (e) {
-      }
+      } catch (e) {}
     }
 
     isLoggedIn = false;
@@ -455,7 +434,6 @@ async function login() {
     contents = loginWindow.webContents;
 
     loginWindow.loadURL(loginURL);
-
 
     loginWindow.on('closed', () => {
       if (!isLoggedIn) {
@@ -481,26 +459,34 @@ async function login() {
       }
     }
 
-    function getCookiesFromSession(cb: (err: any, sessionCookies: any) => void) {
-      return loginWindow.webContents.session.cookies.get({}).then(function onget(sessionCookies) {
-        cb(null, sessionCookies);
-      }).catch(function onerror(err) {
-        cb(err, null);
-      });
+    function getCookiesFromSession(
+      cb: (err: any, sessionCookies: any) => void
+    ) {
+      return loginWindow.webContents.session.cookies
+        .get({})
+        .then(function onget(sessionCookies) {
+          cb(null, sessionCookies);
+        })
+        .catch(function onerror(err) {
+          cb(err, null);
+        });
     }
 
     function hasLoginCookie(sessionCookies: any) {
-      var i;
+      let i;
 
       for (i = sessionCookies.length - 1; i >= 0; --i) {
-        if (sessionCookies[i] && sessionCookies[i].name && sessionCookies[i].name.toUpperCase() === 'EPIC_SSO') {
+        if (
+          sessionCookies[i] &&
+          sessionCookies[i].name &&
+          sessionCookies[i].name.toUpperCase() === 'EPIC_SSO'
+        ) {
           return true;
         }
       }
 
       return false;
     }
-
 
     function checkIfLoggedIn() {
       if (atLeastOnePageLoaded && currentURL.indexOf('id/login') === -1) {
@@ -512,7 +498,6 @@ async function login() {
             } else {
               console.log(sessionCookies);
               if (hasLoginCookie(sessionCookies)) {
-
                 cookies = sessionCookies;
                 console.log(cookies);
                 setCookiesFromBrowser(cookies);
@@ -526,33 +511,42 @@ async function login() {
       }
     }
 
-
-    contents.on('did-frame-navigate', function(_e, url, _code, _status, _isMainFrame, _frameProcessId, _frameRoutingId) {
+    contents.on('did-frame-navigate', function(
+      _e,
+      url,
+      _code,
+      _status,
+      _isMainFrame,
+      _frameProcessId,
+      _frameRoutingId
+    ) {
       console.log('did-frame-navigate', url);
       currentURL = url;
       if (needsToRedirect) {
         redirectOnLogOut();
-
       } else if (!isLoggedIn) {
         checkIfLoggedIn();
       }
     });
-    contents.on('did-frame-finish-load', (_e, _isMainFrame, _frameProcessId, _frameRoutingId) => {
-      atLeastOnePageLoaded = true;
-      console.log();
-      console.log('did-frame-finish-load');
-      if (!isLoggedIn) {
-        checkIfLoggedIn();
+    contents.on(
+      'did-frame-finish-load',
+      (_e, _isMainFrame, _frameProcessId, _frameRoutingId) => {
+        atLeastOnePageLoaded = true;
+        console.log();
+        console.log('did-frame-finish-load');
+        if (!isLoggedIn) {
+          checkIfLoggedIn();
+        }
       }
-    });
+    );
 
     /// Quixel login
     /// https://www.epicgames.com/id/login?client_id=b9101103b8814baa9bb4e79e5eb107d0&response_type=code
     /// Ends here https://quixel.com/?code=812d81d1f1ad4f699091b03f0b1083d7
     contents.on('page-title-updated', function(_e, title, explicitSet) {
       console.log('page-title-updated', title, explicitSet);
-      ///TODO: Make sure it goes to the right page when logging out
-      ///page-title-updated Logging out... | Epic Games true
+      /// TODO: Make sure it goes to the right page when logging out
+      /// page-title-updated Logging out... | Epic Games true
       if (typeof title === 'string' && title.indexOf('Logging out') > -1) {
         console.log('Detected logout. Will redirect to log in.');
         atLeastOnePageLoaded = false;
@@ -566,7 +560,6 @@ async function login() {
   });
 }
 
-let filterCache = '';
 
 async function updateVault(force: boolean) {
   console.log('do downloadVaultData');
@@ -589,7 +582,7 @@ export default function Manager(props: Props) {
   //   counter
   // } = props;
 
-  // console.log(props);
+  console.log(props);
 
   const [filter, setFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -597,12 +590,10 @@ export default function Manager(props: Props) {
   const [sortBy, setSortBy] = useState('');
   const [ascending, setAscending] = useState(false);
 
-
-  let initialState: any[] = [];
+  const initialState: any[] = [];
   const [filteredData, setFilteredData] = useState(initialState);
   const classes = useStyles();
   useEffect(() => {
-
     const fetchData = async () => {
       // console.log(vaultData);
       // console.log(vaultData === []);
@@ -618,20 +609,25 @@ export default function Manager(props: Props) {
       const lowercasedTypeFilter = typeFilter.toLowerCase();
       let data = assetData;
       if (lowercasedCategoryFilter.trim() !== '') {
-        data = assetData
-          .filter(value => value.data.categories
+        data = assetData.filter(value =>
+          value.data.categories
             .map((x: any) => x.name.toLowerCase())
-            .some((v: any) => v.includes(lowercasedCategoryFilter)));
+            .some((v: any) => v.includes(lowercasedCategoryFilter))
+        );
       }
       if (lowercasedTypeFilter.trim() !== '') {
-        data = data
-          .filter(value => value.data.distributionMethod?.toLowerCase().includes(lowercasedTypeFilter));
+        data = data.filter(value =>
+          value.data.distributionMethod
+            ?.toLowerCase()
+            .includes(lowercasedTypeFilter)
+        );
       }
       if (lowercasedFilter.trim() !== '') {
-        data = data
-          .filter(item => {
-            return item.data.allTags.some((t: string) => t.includes(lowercasedFilter));
-          });
+        data = data.filter(item => {
+          return item.data.allTags.some((t: string) =>
+            t.includes(lowercasedFilter)
+          );
+        });
       }
       let sortedData: any[] = [];
       console.log(sortBy);
@@ -643,10 +639,14 @@ export default function Manager(props: Props) {
           sortedData = [...data];
           break;
         case 'price':
-          sortedData = [...data].sort((a, b) => a.data.priceValue - b.data.priceValue);
+          sortedData = [...data].sort(
+            (a, b) => a.data.priceValue - b.data.priceValue
+          );
           break;
         case 'alphabetical':
-          sortedData = [...data].sort((a, b) => (a.data.title.toLowerCase().localeCompare(b.data.title.toLowerCase())));
+          sortedData = [...data].sort((a, b) =>
+            a.data.title.toLowerCase().localeCompare(b.data.title.toLowerCase())
+          );
           break;
         default:
           sortedData = [...data];
@@ -663,19 +663,19 @@ export default function Manager(props: Props) {
   }, [filter, categoryFilter, typeFilter, sortBy, ascending]);
 
   function handleChange(event: ChangeEvent<HTMLInputElement>) {
-    let value = event.target.value;
-    filterCache = value;
+    const { value } = event.target;
     setFilter(value);
   }
 
   let countPerRow = 3;
 
   // let rowCount = 1;
-  function onResize({ width }) {
+  function onResize({ width }: { width: number }) {
     countPerRow = Math.floor(width / 180);
     // rowCount = Math.ceil(filteredData.length / countPerRow);
   }
 
+  // @ts-ignore
   function cellRenderer({ columnIndex, key, rowIndex, style }) {
     const imgStyles = {
       margin: 'auto',
@@ -683,45 +683,57 @@ export default function Manager(props: Props) {
       maxWidth: '100%',
       maxHeight: '100%'
     };
-    let item = filteredData[columnIndex + rowIndex * countPerRow];
+    const item = filteredData[columnIndex + rowIndex * countPerRow];
     if (!item) {
-      return (<div key={key} style={style}/>);
+      return <div key={key} style={style} />;
     }
     return (
       <div key={key} style={style}>
-
-        <img style={imgStyles} title={item.data.title} src={item.data.thumbnail} alt={item.data.title}/>
+        <img
+          style={imgStyles}
+          title={item.data.title}
+          src={item.data.thumbnail}
+          alt={item.data.title}
+        />
 
         <GridListTileBar
           title={
-            <Link underline='none' color='inherit'
-                  href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}>
+            <Link
+              underline="none"
+              color="inherit"
+              href={`com.epicgames.launcher://ue/marketplace/item/${item.data.catalogItemId}`}
+            >
               <b>{item.data.title}</b>
-            </Link>}
-          subtitle={<Tooltip
-            title={item.data.allTags.join(', ')}><span>{item.data.categories.map((x: any) => x.name).join(', ')}</span></Tooltip>}
+            </Link>
+          }
+          subtitle={(
+            <Tooltip title={item.data.allTags.join(', ')}>
+              <span>
+                {item.data.categories.map((x: any) => x.name).join(', ')}
+              </span>
+            </Tooltip>
+          )}
           actionIcon={
             <Tooltip title={item.data.description}>
               <IconButton aria-label={item.data.title} className={classes.icon}>
-                <InfoIcon style={{ color: 'white' }}/>
+                <InfoIcon style={{ color: 'white' }} />
               </IconButton>
             </Tooltip>
           }
         />
-
       </div>
     );
   }
 
   return (
-    <React.Fragment>
-      <CssBaseline/>
+    <>
+      <CssBaseline />
       <AppBar position="relative">
         <Toolbar>
-          {/*<IconButton color="secondary" aria-label="go back" component={RouterLink} to={routes.HOME}>*/}
-          {/*  <ArrowBackIcon className={classes.icon}/>*/}
-          {/*</IconButton>*/}
-          {/*<CameraIcon className={classes.icon}/>*/}
+          {/* <IconButton color="secondary" aria-label="go back" component={RouterLink} to={routes.HOME}> */}
+          {/*  <ArrowBackIcon className={classes.icon}/> */}
+          {/* </IconButton> */}
+          {/* <CameraIcon className={classes.icon}/> */}
           <Typography variant="h6" color="inherit" noWrap>
             Unreal Asset Manager
           </Typography>
@@ -731,17 +743,39 @@ export default function Manager(props: Props) {
         {/* Hero unit */}
         <div className={classes.heroContent}>
           <Container>
-            <Typography component="h1" variant="h2" align="center" color="textPrimary" gutterBottom>
+            <Typography
+              component="h1"
+              variant="h2"
+              align="center"
+              color="textPrimary"
+              gutterBottom
+            >
               Unreal Asset Manager
             </Typography>
-            <Typography variant="h5" align="center" color="textSecondary" paragraph>
+            <Typography
+              variant="h5"
+              align="center"
+              color="textSecondary"
+              paragraph
+            >
               Too Many Assets
             </Typography>
-            <Typography component={'span'} variant="h5" align="center" color="textSecondary" paragraph>
+            <Typography
+              component="span"
+              variant="h5"
+              align="center"
+              color="textSecondary"
+              paragraph
+            >
               <Grid container spacing={2} justify="center">
                 <Grid item>
-                  <TextField value={filter} onChange={handleChange} id="outlined-basic" label="Filter"
-                             variant="outlined"/>
+                  <TextField
+                    value={filter}
+                    onChange={handleChange}
+                    id="outlined-basic"
+                    label="Filter"
+                    variant="outlined"
+                  />
                 </Grid>
               </Grid>
             </Typography>
@@ -753,27 +787,47 @@ export default function Manager(props: Props) {
                   </Button>
                 </Grid>
                 <Grid item>
-                  <Button onClick={printCookie} variant="outlined" color="primary">
+                  <Button
+                    onClick={printCookie}
+                    variant="outlined"
+                    color="primary"
+                  >
                     printCookie
                   </Button>
                 </Grid>
                 <Grid item>
-                  <Button onClick={() => downloadVaultData(false)} variant="outlined" color="primary">
+                  <Button
+                    onClick={() => downloadVaultData(false)}
+                    variant="outlined"
+                    color="primary"
+                  >
                     downloadVaultData
                   </Button>
                 </Grid>
                 <Grid item>
-                  <Button onClick={downloadAssetsData} variant="outlined" color="primary">
+                  <Button
+                    onClick={downloadAssetsData}
+                    variant="outlined"
+                    color="primary"
+                  >
                     downloadAssetsData
                   </Button>
                 </Grid>
                 <Grid item>
-                  <Button onClick={collectTags} variant="outlined" color="primary">
+                  <Button
+                    onClick={collectTags}
+                    variant="outlined"
+                    color="primary"
+                  >
                     collectTags
                   </Button>
                 </Grid>
                 <Grid item>
-                  <Button onClick={() => updateVault(true)} variant="outlined" color="primary">
+                  <Button
+                    onClick={() => updateVault(true)}
+                    variant="outlined"
+                    color="primary"
+                  >
                     Force updateVault
                   </Button>
                 </Grid>
@@ -781,144 +835,152 @@ export default function Manager(props: Props) {
 
               <FormControl component="fieldset">
                 <FormLabel component="legend">Category</FormLabel>
-                <RadioGroup row aria-label="position" name="position"
-                            onChange={(_, value) => {
-                              setCategoryFilter(value);
-                            }} defaultValue="">
+                <RadioGroup
+                  row
+                  aria-label="position"
+                  name="position"
+                  onChange={(_, value) => {
+                    setCategoryFilter(value);
+                  }}
+                  defaultValue=""
+                >
                   <FormControlLabel
                     value="2d assets"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="2d assets"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="animations"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="animations"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="animations"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="architectural visualization"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="blueprints"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="blueprints"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="characters"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="characters"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="code plugins"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="code plugins"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="environments"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="environments"
                     labelPlacement="start"
                   />
 
                   <FormControlLabel
                     value="epic content"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="epic content"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="materials"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="materials"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="megascans"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="megascans"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="music"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="music"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="props"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="props"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="sound effects"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="sound effects"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="textures"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="textures"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="visual effects"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="visual effects"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="weapons"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="weapons"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value=""
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="*"
                     labelPlacement="start"
                   />
-
-
                 </RadioGroup>
               </FormControl>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Type</FormLabel>
-                <RadioGroup row aria-label="position" name="position"
-                            onChange={(_, value) => {
-                              setTypeFilter(value);
-                            }} defaultValue="">
+                <RadioGroup
+                  row
+                  aria-label="position"
+                  name="position"
+                  onChange={(_, value) => {
+                    setTypeFilter(value);
+                  }}
+                  defaultValue=""
+                >
                   <FormControlLabel
                     value="ASSET_PACK"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="ASSET_PACK"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="COMPLETE_PROJECT"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="COMPLETE_PROJECT"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="ENGINE_PLUGIN"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="ENGINE_PLUGIN"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value=""
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="*"
                     labelPlacement="start"
                   />
@@ -926,31 +988,36 @@ export default function Manager(props: Props) {
               </FormControl>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Sort By</FormLabel>
-                <RadioGroup row aria-label="position" name="position"
-                            onChange={(_, value) => {
-                              setSortBy(value);
-                            }} defaultValue="">
+                <RadioGroup
+                  row
+                  aria-label="position"
+                  name="position"
+                  onChange={(_, value) => {
+                    setSortBy(value);
+                  }}
+                  defaultValue=""
+                >
                   <FormControlLabel
                     value="purchaseDate"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="purchaseDate"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="price"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="price"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="alphabetical"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="alphabetical"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value=""
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="Default"
                     labelPlacement="start"
                   />
@@ -958,19 +1025,24 @@ export default function Manager(props: Props) {
               </FormControl>
               <FormControl component="fieldset">
                 <FormLabel component="legend">Order</FormLabel>
-                <RadioGroup row aria-label="position" name="position"
-                            onChange={(_, value) => {
-                              setAscending(value === 'true');
-                            }} defaultValue="false">
+                <RadioGroup
+                  row
+                  aria-label="position"
+                  name="position"
+                  onChange={(_, value) => {
+                    setAscending(value === 'true');
+                  }}
+                  defaultValue="false"
+                >
                   <FormControlLabel
                     value="true"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="ascending"
                     labelPlacement="start"
                   />
                   <FormControlLabel
                     value="false"
-                    control={<Radio color="primary"/>}
+                    control={<Radio color="primary" />}
                     label="descending"
                     labelPlacement="start"
                   />
@@ -992,19 +1064,21 @@ export default function Manager(props: Props) {
                   countPerRow = Math.floor(width / 180);
                   const rowCount = Math.ceil(filteredData.length / countPerRow);
 
-                  return (<VirtualGrid
-                    autoHeight
-                    width={width}
-                    height={height}
-                    isScrolling={isScrolling}
-                    onScroll={onChildScroll}
-                    columnCount={countPerRow}
-                    columnWidth={180}
-                    rowCount={rowCount}
-                    rowHeight={180}
-                    cellRenderer={cellRenderer}
-                    scrollTop={scrollTop}
-                  />);
+                  return (
+                    <VirtualGrid
+                      autoHeight
+                      width={width}
+                      height={height}
+                      isScrolling={isScrolling}
+                      onScroll={onChildScroll}
+                      columnCount={countPerRow}
+                      columnWidth={180}
+                      rowCount={rowCount}
+                      rowHeight={180}
+                      cellRenderer={cellRenderer}
+                      scrollTop={scrollTop}
+                    />
+                  );
                 }}
               </AutoSizer>
             )}
@@ -1039,19 +1113,24 @@ export default function Manager(props: Props) {
               ))}
             </GridList>
           </div>
-        </Paper>*/}
+        </Paper> */}
       </main>
       {/* Footer */}
       <footer className={classes.footer}>
         <Typography variant="h6" align="center" gutterBottom>
           Fin.
         </Typography>
-        <Typography variant="subtitle1" align="center" color="textSecondary" component="p">
+        <Typography
+          variant="subtitle1"
+          align="center"
+          color="textSecondary"
+          component="p"
+        >
           Don't look at me, baka!
         </Typography>
-        <Copyright/>
+        <Copyright />
       </footer>
       {/* End footer */}
-    </React.Fragment>
+    </>
   );
 }
